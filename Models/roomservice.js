@@ -2,15 +2,29 @@ import { Room } from "./roommodel";
 import {Booking} from './bookingmodel'
 
 function readallRooms (req, res, options = []){
+    console.log(req.query)
     const DateFrom = new Date(req.query.dateFrom.split('Z')[0])
     const DateTo = new Date(req.query.dateTo.split('Z')[0])
+    const type = req.query.type
+
+    
 
     Booking.find({ $and: [
         {"DateFrom": { "$gte": DateFrom, } }, 
         {"DateTo": { "$lte": DateTo } } 
     ]}, { Number: 1 }
     ).then((result) => {
-        Room.find({ Number: { "$nin": result.map(x => x.Number) }})
+        let query = { 
+            Number: { "$nin": result.map(x => x.Number) }
+        }
+
+        if (type != "")
+            query = {
+                "Type": type,
+                ...query
+            }
+
+        Room.find(query)
         .then((result)=>{
             console.log("Rooms found")
         res.json(result)})
